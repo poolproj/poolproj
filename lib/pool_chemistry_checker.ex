@@ -13,7 +13,8 @@ defmodule PoolChemistryChecker do
     soda_ash: 0.0015, # oz per gallon to raise pH
     muriatic_acid: 0.002, # oz per gallon to lower pH
     baking_soda: 0.002, # oz per gallon to raise alkalinity
-    calcium_chloride: 0.0015 # oz per gallon to increase hardness
+    calcium_chloride: 0.0015, # oz per gallon to increase hardness
+    clarifier: 0.0002 # oz per gallon to increase clarity of cloudy water
   }
 
   def check_levels(pool_data) do
@@ -44,10 +45,14 @@ defmodule PoolChemistryChecker do
   end
 
   defp balance_combined_chlorine(volume, value) do
-    {min, _max} = @desired_ranges.combined_chlorine
+    {_, max} = @desired_ranges.combined_chlorine
 
-    if value > min do
-      {:high, "Shock the pool with chlorine to remove combined chlorine."}
+    if value > max do
+      # Breakpoint chlorination requires Free Chlorine to be increased by Combined Chlorine * 10
+      required_chlorine_increase = value * 10
+      amount = Float.round(required_chlorine_increase * volume * @chemical_dosages.chlorine, 2)
+
+      {:high, "Shock the pool by adding #{amount} oz of chlorine to remove combined chlorine."}
     else
       {:ok, "Combined chlorine is within range."}
     end
