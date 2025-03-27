@@ -18,4 +18,3 @@ defmodule PoolSimulator do
     Enum.random(addresses)
   end
 end
-
