@@ -7,6 +7,11 @@ defmodule PoolMonitor do
     analysis = PoolChemistryChecker.check_levels(pool_data)
     IO.puts("\nAnalysis & Recommendations:")
     IO.inspect(analysis)
+
+    adjusted = AdjustChemicals.adjust_all_parameters(pool_data)
+    IO.puts("\nAdjusted Chemicals:")
+    IO.inspect(adjusted)
+
   end
 end
 
