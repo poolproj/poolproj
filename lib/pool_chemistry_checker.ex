@@ -1,4 +1,24 @@
 defmodule PoolChemistryChecker do
+  @moduledoc """
+  Provides functionality to analyze and adjust pool chemical levels to maintain proper water balance.
+
+  This module checks five critical chemical parameters in pool water, free chlorine, combined chlorine,
+  pH, total alkalinity, and calcium hardness, against recommended ranges. Based on deviations from
+  the desired range, it calculates the necessary chemical dosages for correction.
+
+  ## Features
+
+    - Verifies if current pool chemical levels fall within desired thresholds.
+    - Suggests dosage amounts and specific chemicals for adjustments.
+    - Supports shock treatment for combined chlorine issues.
+    - Returns descriptive messages for pool maintenance actions.
+
+  @author [author]
+  @version 1.0
+  @complexity Medium
+  @since 2025-04-03
+  """
+
   @desired_ranges %{
     free_chlorine: {2.0, 4.0},
     combined_chlorine: {0.0, 0.5},
@@ -17,6 +37,29 @@ defmodule PoolChemistryChecker do
     clarifier: 0.0002 # oz per gallon to increase clarity of cloudy water
   }
 
+  @doc """
+  Analyzes the current chemical levels of a pool and provides recommendations for adjustments.
+
+  ## Parameters
+
+    - `pool_data` (map): A map containing:
+      - `:pool_volume` (float): Pool volume in gallons.
+      - `:free_chlorine` (float): Current free chlorine level (ppm).
+      - `:combined_chlorine` (float): Current combined chlorine level (ppm).
+      - `:pH` (float): Current pH level.
+      - `:total_alkalinity` (integer): Current alkalinity (ppm).
+      - `:calcium_hardness` (integer): Current calcium hardness (ppm).
+
+  ## Returns
+
+    - A map containing the status of each chemical parameter as `:ok`, `:low`, or `:high` with
+      recommended actions.
+
+  @complexity Low
+  @since 2025-04-03
+  @author [author]
+  @version 1.0
+  """
   def check_levels(pool_data) do
     %{
       free_chlorine: balance_free_chlorine(pool_data.pool_volume, pool_data.free_chlorine),
@@ -27,6 +70,14 @@ defmodule PoolChemistryChecker do
     }
   end
 
+  @doc """
+  Determines whether free chlorine is within the acceptable range and suggests dosage if not.
+
+  @complexity Low
+  @since 2025-04-03
+  @author [author]
+  @version 1.0
+  """
   defp balance_free_chlorine(volume, value) do
     {min, max} = @desired_ranges.free_chlorine
 
@@ -44,6 +95,14 @@ defmodule PoolChemistryChecker do
     end
   end
 
+  @doc """
+  Checks combined chlorine levels and recommends a shock treatment if necessary.
+
+  @complexity Low
+  @since 2025-04-03
+  @author [author]
+  @version 1.0
+  """
   defp balance_combined_chlorine(volume, value) do
     {_, max} = @desired_ranges.combined_chlorine
 
@@ -58,6 +117,14 @@ defmodule PoolChemistryChecker do
     end
   end
 
+  @doc """
+  Evaluates the pH level and recommends an acid or base treatment to adjust it.
+
+  @complexity Low
+  @since 2025-04-03
+  @version 1.0
+  @author [author]
+  """
   defp balance_pH(volume, value) do
     {min, max} = @desired_ranges.pH
 
@@ -75,6 +142,14 @@ defmodule PoolChemistryChecker do
     end
   end
 
+  @doc """
+  Analyzes total alkalinity and suggests increasing or decreasing it using appropriate chemicals.
+
+  @complexity Low
+  @since 2025-04-03
+  @version 1.0
+  @author [author]
+  """
   defp balance_total_alkalinity(volume, value) do
     {min, max} = @desired_ranges.total_alkalinity
 
@@ -92,6 +167,14 @@ defmodule PoolChemistryChecker do
     end
   end
 
+  @doc """
+  Assesses calcium hardness and recommends increasing with calcium chloride or dilution if too high.
+
+  @complexity Low
+  @since 2025-04-03
+  @version 1.0
+  @author [author]
+  """
   defp balance_calcium_hardness(volume, value) do
     {min, max} = @desired_ranges.calcium_hardness
 
