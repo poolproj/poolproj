@@ -21,15 +21,14 @@ jobs:
             echo "Navigating to project directory..."
             cd /opt/pool_proj
 
-            echo "Stopping app (if running)..."
-            sudo systemctl stop poolproj || true
+            echo "Configuring Git pull behavior..."
+            git config pull.rebase false
 
             echo "Pulling latest code from GitHub..."
             git pull origin main
 
             echo "Installing dependencies..."
             mix deps.get
-            mix compile
 
-            echo "Starting app..."
-            sudo systemctl start poolproj
+            echo "Compiling project..."
+            mix compile
