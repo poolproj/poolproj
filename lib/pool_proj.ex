@@ -11,8 +11,6 @@ defmodule PoolProj do
       iex> PoolProj.hello()
       :world
 
-      TESTicles
-
   """
   def hello do
     :world

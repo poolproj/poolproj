@@ -1,6 +1,6 @@
 defmodule PoolSimulator do
   def generate_data do
-    location = get_random_location()
+    location = get_random_location() |> Jason.encode!()
 
     %{
       free_chlorine: Float.round(:rand.uniform() * 7, 2),
@@ -18,3 +18,4 @@ defmodule PoolSimulator do
     Enum.random(addresses)
   end
 end
+
