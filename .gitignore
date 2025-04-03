@@ -2,15 +2,27 @@
 /_build
 /deps
 erl_crash.dump
+*.beam
+*.app
+*.ez
+*.dump
 
-# Static assets (optional)
-assets/node_modules
-assets/build
+# Static asset build output (if using esbuild or a frontend)
+assets/node_modules/
+assets/build/
+priv/static/assets/
 
-# Environment files
+# Environment and config
 .env
 .secret.exs
 
-# OS/System
+# OS/system/editor files
 .DS_Store
 *.swp
+*.swo
+*.bak
+*.tmp
+
+# VS Code or JetBrains (optional)
+.vscode/
+.idea/

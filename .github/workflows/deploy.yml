@@ -19,7 +19,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "Navigating to project directory..."
-            cd /opt/poolproj
+            cd /opt/pool_proj
 
             echo "Stopping app (if running)..."
             sudo systemctl stop poolproj || true
