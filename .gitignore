@@ -1,0 +1,16 @@
+# Build artifacts
+/_build
+/deps
+erl_crash.dump
+
+# Static assets (optional)
+assets/node_modules
+assets/build
+
+# Environment files
+.env
+.secret.exs
+
+# OS/System
+.DS_Store
+*.swp
