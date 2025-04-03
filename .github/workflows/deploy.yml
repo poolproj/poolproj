@@ -1,0 +1,34 @@
+name: Deploy to Droplet
+
+on:
+  push:
+    branches:
+      - main  # or change this if you deploy from another branch
+
+jobs:
+  deploy:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH into Droplet and Deploy
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "Navigating to project directory..."
+            cd /opt/pool_proj
+
+            echo "Configuring Git pull behavior..."
+            git config pull.rebase false
+
+            echo "Pulling latest code from GitHub..."
+            git pull origin main
+
+            echo "Installing dependencies..."
+            mix deps.get
+
+            echo "Compiling project..."
+            mix compile
