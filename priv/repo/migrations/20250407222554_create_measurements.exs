@@ -9,8 +9,8 @@ defmodule PoolProj.Repo.Migrations.CreateMeasurements do
       add :free_chlorine, :float
       add :combined_chlorine, :float
       add :pH, :float
-      add :total_alkalinity, :integer
-      add :calcium_hardness, :integer
+      add :total_alkalinity, :float
+      add :calcium_hardness, :float
 
       timestamps()
     end
