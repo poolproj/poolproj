@@ -141,7 +141,7 @@ defmodule PoolMonitor do
       date: Date.add(latest_measurement.date, 1)
     })
 
-    Repo.insert(Measurement.changeset(%Measurement{}, Map.from_struct(changes)))
+    Repo.insert(Measurement.changeset(%Measurement{}, changes))
   end
 
   def loop(interval) do
