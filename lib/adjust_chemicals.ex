@@ -1,4 +1,4 @@
-defmodule AdjustChemicals do
+defmodule PoolDataAdjuster do
   @moduledoc """
   Provides functionality to automatically adjust various chemical parameters
   in pool water to fall within recommended safe and effective ranges.
@@ -43,6 +43,7 @@ defmodule AdjustChemicals do
   ## Since
   2025-04-03
   """
+  def adjust(pool_data), do: adjust_all_parameters(pool_data)
   def adjust_all_parameters(pool_data) do
     Enum.reduce(@desired_ranges, pool_data, fn {key, _range}, acc ->
       case Map.get(pool_data, key) do
