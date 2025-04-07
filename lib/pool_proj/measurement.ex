@@ -7,8 +7,8 @@ defmodule PoolProj.Measurement do
     field :free_chlorine, :float
     field :combined_chlorine, :float
     field :pH, :float
-    field :total_alkalinity, :integer
-    field :calcium_hardness, :integer
+    field :total_alkalinity, :float
+    field :calcium_hardness, :float
 
     belongs_to :pool, PoolProj.Pool
 
