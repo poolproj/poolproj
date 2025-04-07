@@ -8,7 +8,7 @@ defmodule CSVReader do
     |> File.stream!()
     |> MyCSVParser.parse_stream()
     |> Enum.map(fn [
-                   city,      # city
+                   _city,      # city
                    city_ascii, # city_ascii
                    _lat, _lng, # skipping lat, lng
                    country,   # country

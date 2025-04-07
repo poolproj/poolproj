@@ -43,7 +43,7 @@ defmodule PoolChemistryChecker do
     end
   end
 
-  defp balance_combined_chlorine(volume, value) do
+  defp balance_combined_chlorine(_volume, value) do
     {min, _max} = @desired_ranges.combined_chlorine
 
     if value > min do
