@@ -1,9 +1,12 @@
 defmodule PoolMonitor do
+  import Ecto.Query
   alias PoolProj.{Repo, Pool, Measurement, Analysis}
   alias PoolSimulator
   alias PoolGenerator
   alias PoolChemistryChecker
   alias PoolDataAdjuster
+
+
 
   @initial_date ~D[2024-01-01]
 
@@ -120,15 +123,17 @@ defmodule PoolMonitor do
 
   defp get_latest_measurement(pool_id) do
     case Repo.one(
-           from m in Measurement,
+           from(m in Measurement,
              where: m.pool_id == ^pool_id,
              order_by: [desc: m.date],
              limit: 1
+           )
          ) do
       nil -> {:error, :no_measurement_found}
       measurement -> {:ok, measurement}
     end
   end
+
 
   defp insert_adjusted_measurement(pool, latest_measurement, adjusted_data) do
     changes = Map.merge(adjusted_data, %{
