@@ -33,7 +33,7 @@ defmodule PoolMonitor do
       end
     end)
 
-    loop()
+    loop(5_000)
   end
 
 
