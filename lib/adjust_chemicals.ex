@@ -44,11 +44,16 @@ defmodule PoolDataAdjuster do
     2025-04-03
     """
   def adjust(%{} = measurement) do
-    measurement
-    |> Map.from_struct()
-    |> Map.take(Map.keys(@desired_ranges))
-    |> adjust_all_parameters()
+    original = Map.from_struct(measurement)
+
+    adjusted_chemicals =
+      original
+      |> Map.take(Map.keys(@desired_ranges))
+      |> adjust_all_parameters()
+
+    Map.merge(original, adjusted_chemicals)
   end
+
 
   defp adjust_all_parameters(data) do
     Enum.reduce(@desired_ranges, data, fn {key, _}, acc ->
