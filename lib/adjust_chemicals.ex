@@ -82,7 +82,7 @@ defmodule PoolDataAdjuster do
   2025-04-03
   """
 
-  defp adjust_parameter(param, value) do
+  def adjust_parameter(param, value) do
     case Map.get(@desired_ranges, param) do
       {min, max} when is_number(value) ->
         cond do
