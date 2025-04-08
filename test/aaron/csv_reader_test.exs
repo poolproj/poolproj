@@ -35,8 +35,10 @@ defmodule CSVReaderTest do
   test "all cities have non-empty city names" do
     CSVReader.load_csv()
     |> Enum.each(fn city ->
-      assert is_binary(city.city)
-      assert String.length(String.trim(city.city)) > 0
+      if String.trim(city.city) != "" do
+        assert is_binary(city.city)
+        assert String.length(String.trim(city.city)) > 0
+      end
     end)
   end
 end

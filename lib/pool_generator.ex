@@ -17,7 +17,7 @@ defmodule PoolGenerator do
   @complexity Low
   @since 2025-04-07
   """
-
+  @locations CSVReader.load_csv()
   @doc """
   Generates a single pool data map with a random location and volume.
 

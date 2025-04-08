@@ -11,3 +11,5 @@ config :pool_proj, PoolProj.Repo,
 
 config :pool_proj,
   ecto_repos: [PoolProj.Repo]
+
+# cockroach sql --insecure --host=localhost:26257 --database=pool_proj
