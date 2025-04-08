@@ -325,7 +325,7 @@ defmodule PoolMonitor do
               IO.inspect(reason, label: "❌ Simulation failed for pool #{pool.id}")
           end
 
-        {:error, :not_found} ->
+        {:error, :no_measurement_found} ->
           IO.puts("⚠️  No measurements found for pool #{pool.id}, generating new data...")
 
           # Generate new measurement and analysis from scratch
