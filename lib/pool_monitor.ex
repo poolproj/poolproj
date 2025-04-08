@@ -107,8 +107,7 @@ defmodule PoolMonitor do
     loop(5_000)
   end
 
-  @doc false
-  @moduledoc """
+  @doc """
   Generates an initial measurement map for a given pool, merging simulated chemistry
   data with pool-specific metadata like `pool_id` and the `@initial_date`.
 
@@ -125,7 +124,7 @@ defmodule PoolMonitor do
   @complexity Low - Performs simple map merging of static and simulated values.
   @since 2025-04-07
   """
-  defp create_initial_measurement(pool) do
+  def create_initial_measurement(pool) do
     data = PoolSimulator.generate_initial_data()
 
     Map.merge(data, %{
@@ -134,8 +133,7 @@ defmodule PoolMonitor do
     })
   end
 
-  @doc false
-  @moduledoc """
+  @doc """
   Inserts a pool measurement into the database using an Ecto changeset.
 
   ## Parameters
@@ -152,13 +150,12 @@ defmodule PoolMonitor do
   @complexity Low - Wraps standard Ecto insert for a single struct.
   @since 2025-04-07
   """
-  defp add_measurement_to_db(measurement_data) do
+  def add_measurement_to_db(measurement_data) do
     changeset = Measurement.changeset(%Measurement{}, measurement_data)
     Repo.insert(changeset)
   end
 
-  @doc false
-  @moduledoc """
+  @doc """
   Analyzes a pool's measurement data to determine chemical status and maintenance
   recommendations based on thresholds.
 
@@ -177,7 +174,7 @@ defmodule PoolMonitor do
   @complexity Medium - Combines pool and measurement data and performs external analysis.
   @since 2025-04-07
   """
-  defp analyze_pool_measurement(measurement) do
+  def analyze_pool_measurement(measurement) do
     pool = Repo.get!(Pool, measurement.pool_id)
 
     pool_data = %{
@@ -198,8 +195,7 @@ defmodule PoolMonitor do
     }
   end
 
-  @doc false
-  @moduledoc """
+  @doc """
   Inserts an analysis entry into the database using an Ecto changeset.
 
   ## Parameters
@@ -216,13 +212,12 @@ defmodule PoolMonitor do
   @complexity Low - Simple Ecto insert logic for analysis struct.
   @since 2025-04-07
   """
-  defp add_analysis_to_db(analysis_data) do
+  def add_analysis_to_db(analysis_data) do
     changeset = Analysis.changeset(%Analysis{}, analysis_data)
     Repo.insert(changeset)
   end
 
-  @doc false
-  @moduledoc """
+  @doc """
   Formats a list of chemical check results into a user-friendly, space-separated string
   of recommendations.
 
@@ -244,7 +239,7 @@ defmodule PoolMonitor do
   @complexity Low - Performs simple value extraction and string concatenation.
   @since 2025-04-07
   """
-  defp format_recommendations(results) do
+  def format_recommendations(results) do
     results
     |> Map.values()
     |> Enum.map(fn
@@ -254,8 +249,7 @@ defmodule PoolMonitor do
     |> Enum.join(" ")
   end
 
-  @doc false
-  @moduledoc """
+  @doc """
   Summarizes overall chemical status for a pool based on level severity.
 
   ## Parameters
@@ -278,7 +272,7 @@ defmodule PoolMonitor do
   @complexity Low - Performs simple pattern matching on level statuses.
   @since 2025-04-07
   """
-  defp summarize_status(results) do
+  def summarize_status(results) do
     cond do
       Enum.any?(results, fn {_, {:high, _}} -> true; _ -> false end) -> "critical"
       Enum.any?(results, fn {_, {:low, _}} -> true; _ -> false end) -> "warning"
@@ -286,8 +280,7 @@ defmodule PoolMonitor do
     end
   end
 
-  @doc false
-  @moduledoc """
+  @doc """
   Performs a one-time simulation cycle across all pools in the database.
 
   For each pool:
@@ -314,7 +307,7 @@ defmodule PoolMonitor do
   @complexity Medium - Orchestrates a multi-step data pipeline per pool.
   @since 2025-04-07
   """
-  defp run_once do
+  def run_once do
     IO.puts("🚀 Running daily simulation...")
 
     Repo.all(Pool)
@@ -332,8 +325,7 @@ defmodule PoolMonitor do
     end)
   end
 
-  @doc false
-  @moduledoc """
+  @doc """
   Fetches the most recent measurement for a given pool ID.
 
   ## Parameters
@@ -355,7 +347,7 @@ defmodule PoolMonitor do
   @complexity Low - Executes a filtered, sorted Ecto query.
   @since 2025-04-07
   """
-  defp get_latest_measurement(pool_id) do
+  def get_latest_measurement(pool_id) do
     case Repo.one(
            from(m in Measurement,
              where: m.pool_id == ^pool_id,
@@ -368,8 +360,7 @@ defmodule PoolMonitor do
     end
   end
 
-  @doc false
-  @moduledoc """
+  @doc """
   Inserts a new adjusted measurement record for a pool based on previous measurement data.
 
   ## Parameters
