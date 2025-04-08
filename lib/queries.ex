@@ -341,9 +341,6 @@ def print_all_pools do
 end
 
 @doc """
-Displays all measurements for a given pool ID in a readable format.
-"""
-@doc """
 Displays all measurements for a given pool ID in a readable table-like format.
 """
 def print_measurements_for_pool(pool_id) do

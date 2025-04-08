@@ -3,10 +3,12 @@ defmodule PoolProj.Application do
 
   def start(_type, _args) do
     children = [
-      PoolProj.Repo
+      PoolProj.Repo,
+      SimulationServer
     ]
 
     opts = [strategy: :one_for_one, name: PoolProj.Supervisor]
     Supervisor.start_link(children, opts)
   end
+
 end

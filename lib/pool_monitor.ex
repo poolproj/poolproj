@@ -2,6 +2,7 @@ defmodule PoolMonitor do
   import Ecto.Query
   alias PoolProj.{Repo, Pool, Measurement, Analysis}
   alias PoolSimulator
+  alias SimulationServer
   alias PoolGenerator
   alias PoolChemistryChecker
   alias PoolDataAdjuster
@@ -280,68 +281,76 @@ defmodule PoolMonitor do
     end
   end
 
+
   @doc """
-  Performs a one-time simulation cycle across all pools in the database.
+Runs a single simulation cycle across all pools.
 
-  For each pool:
-    * Retrieves the latest measurement
-    * Adjusts chemistry values
-    * Inserts new measurement
-    * Analyzes the result
-    * Stores new analysis
+This function triggers the simulation of a single day using the `SimulationServer.simulate_day/0`
+function. It is intended to be called once per simulation cycle.
 
-  Logs simulation progress or errors to the console.
+## Complexity
 
-  ## Returns
+This function has constant time complexity, O(1), as it delegates the work to `SimulationServer.simulate_day/0`.
 
-    * `:ok` after all pools are processed (side effects only)
+@author Aaron, Grant
+@version 1.0.1
+@since 2025-04-08
+@complexity O(1)
+"""
+def run_once do
+  SimulationServer.simulate_day()
+end
 
-  @example
+@doc """
+Processes simulation data for a specific pool.
 
-      PoolMonitor.run_once()
+This function attempts to retrieve the latest measurement for the given `pool`. If a measurement exists,
+it adjusts the data, stores the new adjusted measurement, analyzes it, and saves the analysis to the database.
+If no previous measurement is found, it bootstraps a new one and proceeds similarly.
 
-  Runs one day’s simulation without looping continuously.
+Output is printed to the console to indicate whether the simulation succeeded or failed.
 
-  @author Aaron Alexander
-  @version 1.0.0
-  @complexity Medium - Orchestrates a multi-step data pipeline per pool.
-  @since 2025-04-07
-  """
-  def run_once do
-    IO.puts("🚀 Running daily simulation...")
+## Complexity
 
-    Repo.all(Pool)
-    |> Enum.each(fn pool ->
-      case get_latest_measurement(pool.id) do
-        {:ok, latest} ->
-          adjusted_data = PoolDataAdjuster.adjust(latest)
+This function has variable complexity depending on the presence of prior data:
+- If a measurement exists: O(1) per pool.
+- If no data exists: O(1) with additional steps for bootstrapping.
 
-          with {:ok, new_measurement} <- insert_adjusted_measurement(pool, latest, adjusted_data),
-              analysis_data <- analyze_pool_measurement(new_measurement),
-              {:ok, _} <- add_analysis_to_db(analysis_data) do
-            IO.puts("✅ Simulated day for pool #{pool.id}")
-          else
-            {:error, reason} ->
-              IO.inspect(reason, label: "❌ Simulation failed for pool #{pool.id}")
-          end
+@author Aaron, Grant
+@version 1.0.1
+@since 2025-04-08
+@complexity O(1)
+"""
+def process_pool(pool) do
+  case get_latest_measurement(pool.id) do
+    {:ok, latest} ->
+      adjusted_data = PoolDataAdjuster.adjust(latest)
 
-        {:error, :no_measurement_found} ->
-          IO.puts("⚠️  No measurements found for pool #{pool.id}, generating new data...")
-
-          # Generate new measurement and analysis from scratch
-          measurement_data = create_initial_measurement(pool)
-
-          with {:ok, measurement} <- add_measurement_to_db(measurement_data),
-              analysis_data <- analyze_pool_measurement(measurement),
-              {:ok, _} <- add_analysis_to_db(analysis_data) do
-            IO.puts("✅ Bootstrapped simulation for pool #{pool.id}")
-          else
-            {:error, reason} ->
-              IO.inspect(reason, label: "❌ Failed to bootstrap data for pool #{pool.id}")
-          end
+      with {:ok, new_measurement} <- insert_adjusted_measurement(pool, latest, adjusted_data),
+           analysis_data <- analyze_pool_measurement(new_measurement),
+           {:ok, _} <- add_analysis_to_db(analysis_data) do
+        IO.puts("✅ Simulated day for pool #{pool.id}")
+      else
+        {:error, reason} ->
+          IO.inspect(reason, label: "❌ Simulation failed for pool #{pool.id}")
       end
-    end)
+
+    {:error, :no_measurement_found} ->
+      IO.puts("⚠️  No measurements found for pool #{pool.id}, generating new data...")
+
+      measurement_data = create_initial_measurement(pool)
+
+      with {:ok, measurement} <- add_measurement_to_db(measurement_data),
+           analysis_data <- analyze_pool_measurement(measurement),
+           {:ok, _} <- add_analysis_to_db(analysis_data) do
+        IO.puts("✅ Bootstrapped simulation for pool #{pool.id}")
+      else
+        {:error, reason} ->
+          IO.inspect(reason, label: "❌ Failed to bootstrap data for pool #{pool.id}")
+      end
   end
+end
+
 
 
 
