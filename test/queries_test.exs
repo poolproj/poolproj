@@ -95,6 +95,6 @@ defmodule PoolProj.QueryTest do
   test "average_pool_volume returns the average" do
     Repo.insert!(%Pool{volume: 10000})
     Repo.insert!(%Pool{volume: 20000})
-    assert Query.average_pool_volume() == 15000.0
+    assert Decimal.to_float(Query.average_pool_volume()) == 15000.0
   end
 end
