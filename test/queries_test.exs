@@ -1,135 +1,100 @@
 defmodule PoolProj.QueryTest do
-  # mix test test/queries_test.exs
   use ExUnit.Case
+  # mix test test/queries_test.exs
 
-  alias PoolProj.Query
-  alias PoolProj.{Pool, Measurement, Analysis}
+  alias PoolProj.{Repo, Pool, Measurement, Analysis, Query}
+
+  import Ecto.Query
 
   setup do
-    :meck.new(Repo, [:passthrough])
-    on_exit(fn -> :meck.unload(Repo) end)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
     :ok
   end
 
-  describe "get_pool_ids/0_" do
-    test "returns a list of pool IDs_" do
-      :meck.expect(Repo, :all, fn _ -> [1, 2, 3] end)
+  test "get_pool_ids returns all pool ids" do
+    pool1 = Repo.insert!(%Pool{location: "Miami", volume: 10000})
+    pool2 = Repo.insert!(%Pool{location: "Phoenix", volume: 12000})
 
-      result = Query.get_pool_ids()
-
-      assert is_list(result)
-      assert Enum.all?(result, &is_integer/1)
-      assert result == [1, 2, 3]
-    end
+    result = Query.get_pool_ids()
+    assert pool1.id in result
+    assert pool2.id in result
   end
 
-  describe "get_analysis_by_pool_id/1_" do
-    test "returns analysis list for a valid pool ID_" do
-      :meck.expect(Repo, :all, fn _ -> [%Analysis{id: 1}, %Analysis{id: 2}] end)
+  test "get_analysis_by_pool_id returns analysis records for a given pool" do
+    pool = Repo.insert!(%Pool{location: "LA", volume: 8000})
+    m = Repo.insert!(%Measurement{pool_id: pool.id, date: ~D[2024-03-01]})
+    a = Repo.insert!(%Analysis{measurement_id: m.id, status: "ok", recommendation: "Stable"})
 
-      result = Query.get_analysis_by_pool_id(1)
-
-      assert is_list(result)
-      assert Enum.all?(result, &match?(%Analysis{}, &1))
-      assert Enum.count(result) == 2
-    end
-
-    test "returns empty list for pool ID with no analysis records_" do
-      :meck.expect(Repo, :all, fn _ -> [] end)
-
-      result = Query.get_analysis_by_pool_id(999)
-
-      assert is_list(result)
-      assert result == []
-    end
+    result = Query.get_analysis_by_pool_id(pool.id)
+    assert length(result) == 1
+    assert hd(result).id == a.id
   end
 
-  describe "get_measurements_by_pool_id/1_" do
-    test "returns measurements for valid pool ID_" do
-      :meck.expect(Repo, :all, fn _ -> [%Measurement{id: 1}, %Measurement{id: 2}] end)
+  test "get_measurements_by_pool_id returns measurements for pool" do
+    pool = Repo.insert!(%Pool{})
+    m1 = Repo.insert!(%Measurement{pool_id: pool.id, date: ~D[2024-01-01]})
+    m2 = Repo.insert!(%Measurement{pool_id: pool.id, date: ~D[2024-01-02]})
 
-      result = Query.get_measurements_by_pool_id(2)
-
-      assert is_list(result)
-      assert Enum.all?(result, &match?(%Measurement{}, &1))
-      assert Enum.count(result) == 2
-    end
-
-    test "returns empty list when no measurements found_" do
-      :meck.expect(Repo, :all, fn _ -> [] end)
-
-      result = Query.get_measurements_by_pool_id(404)
-
-      assert is_list(result)
-      assert result == []
-    end
+    result = Query.get_measurements_by_pool_id(pool.id)
+    assert Enum.map(result, & &1.id) |> Enum.sort() == [m1.id, m2.id] |> Enum.sort()
   end
 
-  describe "get_latest_measurement_by_pool_id/1_" do
-    test "returns the latest measurement for a pool_" do
-      :meck.expect(Repo, :one, fn _ -> %Measurement{id: 10, date: ~D[2024-03-10]} end)
+  test "get_latest_measurement_by_pool_id returns most recent measurement" do
+    pool = Repo.insert!(%Pool{})
+    _old = Repo.insert!(%Measurement{pool_id: pool.id, date: ~D[2024-01-01]})
+    latest = Repo.insert!(%Measurement{pool_id: pool.id, date: ~D[2024-04-01]})
 
-      result = Query.get_latest_measurement_by_pool_id(1)
-
-      assert match?(%Measurement{}, result)
-      assert result.date == ~D[2024-03-10]
-    end
-
-    test "returns nil if no measurements exist for pool_" do
-      :meck.expect(Repo, :one, fn _ -> nil end)
-
-      result = Query.get_latest_measurement_by_pool_id(1)
-
-      assert is_nil(result)
-    end
+    result = Query.get_latest_measurement_by_pool_id(pool.id)
+    assert result.id == latest.id
   end
 
-  describe "get_analysis_by_measurement_id/1_" do
-    test "returns analysis record for a valid measurement ID_" do
-      :meck.expect(Repo, :one, fn _ -> %Analysis{id: 5} end)
+  test "get_analysis_by_measurement_id returns correct analysis" do
+    m = Repo.insert!(%Measurement{})
+    a = Repo.insert!(%Analysis{measurement_id: m.id, status: "warning", recommendation: "Add chlorine"})
 
-      result = Query.get_analysis_by_measurement_id(5)
-
-      assert match?(%Analysis{}, result)
-      assert result.id == 5
-    end
-
-    test "returns nil when no analysis is associated with the measurement ID_" do
-      :meck.expect(Repo, :one, fn _ -> nil end)
-
-      result = Query.get_analysis_by_measurement_id(404)
-
-      assert is_nil(result)
-    end
+    result = Query.get_analysis_by_measurement_id(m.id)
+    assert result.id == a.id
   end
 
-  describe "count_pools/0_" do
-    test "returns the total number of pools_" do
-      :meck.expect(Repo, :one, fn _ -> 42 end)
+  test "get_pools_by_location filters by location" do
+    p1 = Repo.insert!(%Pool{location: "Houston"})
+    _p2 = Repo.insert!(%Pool{location: "Chicago"})
 
-      result = Query.count_pools()
-
-      assert is_integer(result)
-      assert result == 42
-    end
+    result = Query.get_pools_by_location("Houston")
+    assert length(result) == 1
+    assert hd(result).id == p1.id
   end
 
-  describe "average_pool_volume/0_" do
-    test "returns average pool volume_" do
-      :meck.expect(Repo, :one, fn _ -> 10800.5 end)
+  test "get_measurements_by_pool_id_and_date_range returns filtered results" do
+    pool = Repo.insert!(%Pool{})
+    _m1 = Repo.insert!(%Measurement{pool_id: pool.id, date: ~D[2024-01-01]})
+    m2 = Repo.insert!(%Measurement{pool_id: pool.id, date: ~D[2024-02-01]})
+    _m3 = Repo.insert!(%Measurement{pool_id: pool.id, date: ~D[2024-03-01]})
 
-      result = Query.average_pool_volume()
+    result = Query.get_measurements_by_pool_id_and_date_range(pool.id, ~D[2024-01-15], ~D[2024-02-15])
+    assert length(result) == 1
+    assert hd(result).id == m2.id
+  end
 
-      assert is_float(result)
-      assert result == 10800.5
-    end
+  test "get_analysis_by_status returns all matching analysis entries" do
+    m = Repo.insert!(%Measurement{})
+    a1 = Repo.insert!(%Analysis{measurement_id: m.id, status: "critical"})
+    _a2 = Repo.insert!(%Analysis{measurement_id: m.id, status: "ok"})
 
-    test "returns nil when no pools exist_" do
-      :meck.expect(Repo, :one, fn _ -> nil end)
+    result = Query.get_analysis_by_status("critical")
+    assert length(result) == 1
+    assert hd(result).id == a1.id
+  end
 
-      result = Query.average_pool_volume()
+  test "count_pools returns total pool count" do
+    Repo.insert!(%Pool{})
+    Repo.insert!(%Pool{})
+    assert Query.count_pools() >= 2
+  end
 
-      assert is_nil(result)
-    end
+  test "average_pool_volume returns the average" do
+    Repo.insert!(%Pool{volume: 10000})
+    Repo.insert!(%Pool{volume: 20000})
+    assert Query.average_pool_volume() == 15000.0
   end
 end
