@@ -10,7 +10,7 @@ defmodule PoolDataAdjuster do
   Grant Watson
 
   ## Version
-  1.0
+  1.0.2
 
   ## Complexity
   Medium
@@ -96,12 +96,12 @@ defmodule PoolDataAdjuster do
   end
 
   defp adjust_up(value, min, max) do
-    range = (max - min) * 0.25
+    range = (max - min) * 0.4
     Float.round(value + :rand.uniform() * range, 2)
   end
 
   defp adjust_down(value, min, max) do
-    range = (max - min) * 0.25
+    range = (max - min) * 0.4
     Float.round(value - :rand.uniform() * range, 2)
   end
 
