@@ -341,9 +341,6 @@ def print_all_pools do
 end
 
 @doc """
-Displays all measurements for a given pool ID in a readable format.
-"""
-@doc """
 Displays all measurements for a given pool ID in a readable table-like format.
 """
 def print_measurements_for_pool(pool_id) do
@@ -374,41 +371,41 @@ def print_measurements_for_pool(pool_id) do
   end
 end
 
-defp pad_float(nil), do: "  -- "
-defp pad_float(val), do: String.pad_leading(:erlang.float_to_binary(val, decimals: 2), 6)
+  defp pad_float(nil), do: "  -- "
+  defp pad_float(val), do: String.pad_leading(:erlang.float_to_binary(val, decimals: 2), 6)
 
-@doc """
-Prints the most recent measurement and associated analysis for a pool.
-"""
-def print_latest_snapshot(pool_id) do
-  case get_latest_measurement_by_pool_id(pool_id) do
-    nil ->
-      IO.puts("❌ No measurements found for pool #{pool_id}")
+  @doc """
+  Prints the most recent measurement and associated analysis for a pool.
+  """
+  def print_latest_snapshot(pool_id) do
+    case get_latest_measurement_by_pool_id(pool_id) do
+      nil ->
+        IO.puts("❌ No measurements found for pool #{pool_id}")
 
-    m ->
-      IO.puts("""
-      ✅ Latest Measurement (#{m.date}):
-        - Free Chlorine: #{m.free_chlorine}
-        - Combined Chlorine: #{m.combined_chlorine}
-        - pH: #{m.pH}
-        - TA: #{m.total_alkalinity}
-        - CH: #{m.calcium_hardness}
-      """)
+      m ->
+        IO.puts("""
+        ✅ Latest Measurement (#{m.date}):
+          - Free Chlorine: #{m.free_chlorine}
+          - Combined Chlorine: #{m.combined_chlorine}
+          - pH: #{m.pH}
+          - TA: #{m.total_alkalinity}
+          - CH: #{m.calcium_hardness}
+        """)
 
-      case get_analysis_by_measurement_id(m.id) do
-        nil ->
-          IO.puts("⚠️  No analysis found for this measurement.")
+        case get_analysis_by_measurement_id(m.id) do
+          nil ->
+            IO.puts("⚠️  No analysis found for this measurement.")
 
-        a ->
-          IO.puts("""
-          📊 Analysis:
-            - Status: #{a.status}
-            - Recommendation:
-              #{a.recommendation}
-          """)
-      end
+          a ->
+            IO.puts("""
+            📊 Analysis:
+              - Status: #{a.status}
+              - Recommendation:
+                #{a.recommendation}
+            """)
+        end
+    end
   end
-end
 
 
 end
