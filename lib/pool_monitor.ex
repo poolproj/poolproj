@@ -385,7 +385,7 @@ defmodule PoolMonitor do
   @complexity Low - Wraps a date increment and Ecto insert call.
   @since 2025-04-07
   """
-  defp insert_adjusted_measurement(pool, latest_measurement, adjusted_data) do
+  def insert_adjusted_measurement(pool, latest_measurement, adjusted_data) do
     changes = Map.merge(adjusted_data, %{
       pool_id: pool.id,
       date: Date.add(latest_measurement.date, 1)
