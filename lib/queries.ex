@@ -4,29 +4,77 @@ defmodule PoolProj.Query do
   import Ecto.Query
   alias PoolProj.{Repo, Pool, Measurement, Analysis}
 
-  @doc """
+  @moduledoc """
+  Provides reusable query functions for accessing pool, measurement, and analysis data
+  from the database using Ecto.
 
-  EXAMPLE USAGE:
-  iex> PoolProj.Query.get_pool_ids()
+  This module simplifies retrieving related data for pools, including historical measurements,
+  analyses, and metadata statistics.
 
-  Copy one of those IDS and pass into these:
-  iex> PoolProj.Query.get_analysis_by_pool_id(pool_id)
-  iex> PoolProj.Query.get_measurements_by_pool_id(pool_id)
-  iex> PoolProj.Query.get_latest_measurement_by_pool_id(pool_id)
-  iex> PoolProj.Query.get_analysis_by_measurement_id(pool_id)
+  ## Example Usage
 
+  Fetch all pool IDs:
 
-  iex> PoolProj.Query.count_pools()
-  iex> PoolProj.Query.average_pool_volume()
+      iex> PoolProj.Query.get_pool_ids()
+
+  Use a pool ID to get related records:
+
+      iex> PoolProj.Query.get_analysis_by_pool_id(pool_id)
+      iex> PoolProj.Query.get_measurements_by_pool_id(pool_id)
+      iex> PoolProj.Query.get_latest_measurement_by_pool_id(pool_id)
+      iex> PoolProj.Query.get_analysis_by_measurement_id(measurement_id)
+
+  Get stats and metrics:
+
+      iex> PoolProj.Query.count_pools()
+      iex> PoolProj.Query.average_pool_volume()
+
+  Filter pools or measurements:
+
+      iex> PoolProj.Query.get_pools_by_location("Miami")
+      iex> PoolProj.Query.get_measurements_by_pool_id_and_date_range(pool_id, ~D[2024-01-01], ~D[2024-02-01])
+
+  @author Aaron Alexander
+  @version 1.0.0
+  @complexity Low to Medium
+  @since 2025-04-07
   """
 
-  # Get all pool IDs
+  @doc """
+  Returns a list of all pool IDs from the database.
+
+  ## Example
+
+      iex> PoolProj.Query.get_pool_ids()
+      [1, 2, 3]
+
+  @author Aaron Alexander
+  @version 1.0.0
+  @complexity Low - Executes a basic select query.
+  @since 2025-04-07
+  """
   def get_pool_ids do
     from(p in Pool, select: p.id)
     |> Repo.all()
   end
 
-  # Get analysis by pool_id
+  @doc """
+  Returns all analysis records associated with a specific pool ID.
+
+  ## Parameters
+
+    * `pool_id` - The ID of the pool
+
+  ## Example
+
+      iex> PoolProj.Query.get_analysis_by_pool_id(1)
+      [%Analysis{}, ...]
+
+  @author Aaron Alexander
+  @version 1.0.0
+  @complexity Medium - Requires joins between analysis, measurement, and pool tables.
+  @since 2025-04-07
+  """
   def get_analysis_by_pool_id(pool_id) do
     from(a in Analysis,
       join: m in assoc(a, :measurement),
@@ -37,7 +85,23 @@ defmodule PoolProj.Query do
     |> Repo.all()
   end
 
-  # Get measurements by pool_id
+  @doc """
+  Returns all measurements for a given pool.
+
+  ## Parameters
+
+    * `pool_id` - The ID of the pool
+
+  ## Example
+
+      iex> PoolProj.Query.get_measurements_by_pool_id(2)
+      [%Measurement{}, ...]
+
+  @author Aaron Alexander
+  @version 1.0.0
+  @complexity Low - Filters measurements by pool ID.
+  @since 2025-04-07
+  """
   def get_measurements_by_pool_id(pool_id) do
     from(m in Measurement,
       where: m.pool_id == ^pool_id,
@@ -46,7 +110,25 @@ defmodule PoolProj.Query do
     |> Repo.all()
   end
 
-  # Get the latest measurement for a pool
+  @doc """
+  Returns the most recent measurement entry for a given pool.
+
+  ## Parameters
+
+    * `pool_id` - The ID of the pool
+
+  ## Example
+
+      iex> PoolProj.Query.get_latest_measurement_by_pool_id(1)
+      %Measurement{date: ~D[2024-03-10], ...}
+
+  Returns `nil` if no measurement exists for the pool.
+
+  @author Aaron Alexander
+  @version 1.0.0
+  @complexity Low - Applies ordering and limit to find the most recent record.
+  @since 2025-04-07
+  """
   def get_latest_measurement_by_pool_id(pool_id) do
     from(m in Measurement,
       where: m.pool_id == ^pool_id,
@@ -57,7 +139,25 @@ defmodule PoolProj.Query do
     |> Repo.one()
   end
 
-  # Get analysis for a specific measurement
+  @doc """
+  Returns the analysis record associated with a specific measurement ID.
+
+  ## Parameters
+
+    * `measurement_id` - The ID of the measurement
+
+  ## Example
+
+      iex> PoolProj.Query.get_analysis_by_measurement_id(5)
+      %Analysis{}
+
+  Returns `nil` if no analysis is found for the measurement ID provided.
+
+  @author Aaron Alexander
+  @version 1.0.0
+  @complexity Low - Direct lookup using foreign key.
+  @since 2025-04-07
+  """
   def get_analysis_by_measurement_id(measurement_id) do
     from(a in Analysis,
       where: a.measurement_id == ^measurement_id,
@@ -66,7 +166,23 @@ defmodule PoolProj.Query do
     |> Repo.one()
   end
 
-  # Get all pools in a specific location
+  @doc """
+  Returns all pools that match a given location string.
+
+  ## Parameters
+
+    * `location` - A string representing the pool's location
+
+  ## Example
+
+      iex> PoolProj.Query.get_pools_by_location("Phoenix")
+      [%Pool{}, ...]
+
+  @author Aaron Alexander
+  @version 1.0.0
+  @complexity Low - Executes a simple filter on the `location` field.
+  @since 2025-04-07
+  """
   def get_pools_by_location(location) do
     from(p in Pool,
       where: p.location == ^location,
@@ -75,7 +191,25 @@ defmodule PoolProj.Query do
     |> Repo.all()
   end
 
-  # Get measurements within a date range
+  @doc """
+  Returns all measurements for a specific pool within a given date range.
+
+  ## Parameters
+
+    * `pool_id` - The pool ID
+    * `start_date` - Beginning of the date range (`~D[YYYY-MM-DD]`)
+    * `end_date` - End of the date range (`~D[YYYY-MM-DD]`)
+
+  ## Example
+
+      iex> PoolProj.Query.get_measurements_by_pool_id_and_date_range(2, ~D[2024-01-01], ~D[2024-02-01])
+      [%Measurement{}, ...]
+
+  @author Aaron Alexander
+  @version 1.0.0
+  @complexity Medium - Combines multiple filters including range comparisons.
+  @since 2025-04-07
+  """
   def get_measurements_by_pool_id_and_date_range(pool_id, start_date, end_date) do
     from(m in Measurement,
       where: m.pool_id == ^pool_id and m.date >= ^start_date and m.date <= ^end_date,
@@ -84,7 +218,23 @@ defmodule PoolProj.Query do
     |> Repo.all()
   end
 
-  # Get all analysis with a specific status
+  @doc """
+  Returns all analysis records that match a specific status.
+
+  ## Parameters
+
+    * `status` - One of `"ok"`, `"warning"`, or `"critical"`
+
+  ## Example
+
+      iex> PoolProj.Query.get_analysis_by_status("critical")
+      [%Analysis{}, ...]
+
+  @author Aaron Alexander
+  @version 1.0.0
+  @complexity Low - Simple filter by status field.
+  @since 2025-04-07
+  """
   def get_analysis_by_status(status) do
     from(a in Analysis,
       where: a.status == ^status,
@@ -93,13 +243,39 @@ defmodule PoolProj.Query do
     |> Repo.all()
   end
 
-  # Get the total number of pools
+  @doc """
+  Returns the total number of pools in the database.
+
+  ## Example
+
+      iex> PoolProj.Query.count_pools()
+      25
+
+  @author Aaron Alexander
+  @version 1.0.0
+  @complexity Low - Uses `count/1` aggregation.
+  @since 2025-04-07
+  """
   def count_pools do
     from(p in Pool, select: count(p.id))
     |> Repo.one()
   end
 
-  # Get average pool volume
+  @doc """
+  Returns the average volume of all pools in the database.
+
+  ## Example
+
+      iex> PoolProj.Query.average_pool_volume()
+      10200.75
+
+  Returns `nil` if there are no pools in the database.
+
+  @author Aaron Alexander
+  @version 1.0.0
+  @complexity Low - Uses `avg/1` aggregation.
+  @since 2025-04-07
+  """
   def average_pool_volume do
     from(p in Pool, select: avg(p.volume))
     |> Repo.one()
