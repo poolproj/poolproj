@@ -307,47 +307,42 @@ defmodule PoolMonitor do
   @complexity Medium - Orchestrates a multi-step data pipeline per pool.
   @since 2025-04-07
   """
-def run_once do
-  IO.puts("🚀 Running daily simulation...")
+  def run_once do
+    IO.puts("🚀 Running daily simulation...")
 
-  Repo.all(Pool)
-  |> Enum.each(fn pool ->
-    latest =
+    Repo.all(Pool)
+    |> Enum.each(fn pool ->
       case get_latest_measurement(pool.id) do
-        {:ok, measurement} ->
-          measurement
+        {:ok, latest} ->
+          adjusted_data = PoolDataAdjuster.adjust(latest)
 
-        nil ->
-          IO.warn("⚠️  No measurements found for pool #{pool.id}, generating one...")
-          new_data = create_initial_measurement(pool)
-
-          case add_measurement_to_db(new_data) do
-            {:ok, new} ->
-              new
-
+          with {:ok, new_measurement} <- insert_adjusted_measurement(pool, latest, adjusted_data),
+              analysis_data <- analyze_pool_measurement(new_measurement),
+              {:ok, _} <- add_analysis_to_db(analysis_data) do
+            IO.puts("✅ Simulated day for pool #{pool.id}")
+          else
             {:error, reason} ->
-              IO.inspect(reason, label: "❌ Failed to create initial measurement for pool #{pool.id}")
-              nil
+              IO.inspect(reason, label: "❌ Simulation failed for pool #{pool.id}")
           end
 
-        {:error, reason} ->
-          IO.inspect(reason, label: "❌ Failed to fetch latest measurement for pool #{pool.id}")
-          nil
-      end
+        {:error, :not_found} ->
+          IO.puts("⚠️  No measurements found for pool #{pool.id}, generating new data...")
 
-    if latest do
-      with adjusted_data <- PoolDataAdjuster.adjust(latest),
-           {:ok, new_measurement} <- insert_adjusted_measurement(pool, latest, adjusted_data),
-           analysis_data <- analyze_pool_measurement(new_measurement),
-           {:ok, _} <- add_analysis_to_db(analysis_data) do
-        IO.puts("✅ Simulated day for pool #{pool.id}")
-      else
-        {:error, reason} ->
-          IO.inspect(reason, label: "❌ Simulation failed for pool #{pool.id}")
+          # Generate new measurement and analysis from scratch
+          measurement_data = create_initial_measurement(pool)
+
+          with {:ok, measurement} <- add_measurement_to_db(measurement_data),
+              analysis_data <- analyze_pool_measurement(measurement),
+              {:ok, _} <- add_analysis_to_db(analysis_data) do
+            IO.puts("✅ Bootstrapped simulation for pool #{pool.id}")
+          else
+            {:error, reason} ->
+              IO.inspect(reason, label: "❌ Failed to bootstrap data for pool #{pool.id}")
+          end
       end
-    end
-  end)
-end
+    end)
+  end
+
 
 
 
