@@ -307,31 +307,48 @@ defmodule PoolMonitor do
   @complexity Medium - Orchestrates a multi-step data pipeline per pool.
   @since 2025-04-07
   """
-  def run_once do
-    IO.puts("🚀 Running daily simulation...")
+def run_once do
+  IO.puts("🚀 Running daily simulation...")
 
-    Repo.all(Pool)
-    |> Enum.each(fn pool ->
+  Repo.all(Pool)
+  |> Enum.each(fn pool ->
+    latest =
       case get_latest_measurement(pool.id) do
-        nil ->
-          IO.warn("⚠️  No measurements found for pool #{pool.id}, skipping simulation.")
+        {:ok, measurement} ->
+          measurement
 
-        {:ok, latest} ->
-          with adjusted_data <- PoolDataAdjuster.adjust(latest),
-               {:ok, new_measurement} <- insert_adjusted_measurement(pool, latest, adjusted_data),
-               analysis_data <- analyze_pool_measurement(new_measurement),
-               {:ok, _} <- add_analysis_to_db(analysis_data) do
-            IO.puts("✅ Simulated day for pool #{pool.id}")
-          else
+        nil ->
+          IO.warn("⚠️  No measurements found for pool #{pool.id}, generating one...")
+          new_data = create_initial_measurement(pool)
+
+          case add_measurement_to_db(new_data) do
+            {:ok, new} ->
+              new
+
             {:error, reason} ->
-              IO.inspect(reason, label: "Simulation failed for pool #{pool.id}")
+              IO.inspect(reason, label: "❌ Failed to create initial measurement for pool #{pool.id}")
+              nil
           end
 
         {:error, reason} ->
-          IO.inspect(reason, label: "Failed to get latest measurement for pool #{pool.id}")
+          IO.inspect(reason, label: "❌ Failed to fetch latest measurement for pool #{pool.id}")
+          nil
       end
-    end)
-  end
+
+    if latest do
+      with adjusted_data <- PoolDataAdjuster.adjust(latest),
+           {:ok, new_measurement} <- insert_adjusted_measurement(pool, latest, adjusted_data),
+           analysis_data <- analyze_pool_measurement(new_measurement),
+           {:ok, _} <- add_analysis_to_db(analysis_data) do
+        IO.puts("✅ Simulated day for pool #{pool.id}")
+      else
+        {:error, reason} ->
+          IO.inspect(reason, label: "❌ Simulation failed for pool #{pool.id}")
+      end
+    end
+  end)
+end
+
 
 
   @doc """
