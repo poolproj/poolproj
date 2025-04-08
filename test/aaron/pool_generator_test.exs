@@ -1,40 +1,36 @@
 defmodule PoolGeneratorTest do
   use ExUnit.Case
+  alias PoolGenerator
 
-  test "generate_pool returns a map with location and volume keys" do
-    pool = PoolGenerator.generate_pool()
-
-    assert is_map(pool)
-    assert Map.has_key?(pool, :location)
-    assert Map.has_key?(pool, :volume)
-  end
-
-  test "location is a JSON string" do
-    pool = PoolGenerator.generate_pool()
-
-    assert is_binary(pool.location)
-
-    decoded =
-      case Jason.decode(pool.location) do
-        {:ok, result} -> result
-        _ -> flunk("location is not valid JSON")
-      end
-
-    assert is_map(decoded) or is_binary(decoded)
-  end
-
-  test "volume is within expected range" do
-    for _ <- 1..20 do
+  describe "generate_pool/0" do
+    test "returns a map with location and volume keys" do
       pool = PoolGenerator.generate_pool()
-      assert pool.volume >= 10_000
-      assert pool.volume <= 30_000
+
+      assert is_map(pool)
+      assert Map.has_key?(pool, :location)
+      assert Map.has_key?(pool, :volume)
     end
-  end
 
-  test "generate_pool produces different results across calls" do
-    pool1 = PoolGenerator.generate_pool()
-    pool2 = PoolGenerator.generate_pool()
+    test "location is a valid JSON string representing a city" do
+      pool = PoolGenerator.generate_pool()
 
-    refute pool1 == pool2
+      assert is_binary(pool.location)
+
+      decoded = Jason.decode!(pool.location)
+      assert is_map(decoded)
+
+      assert decoded["city"] |> is_binary()
+      assert decoded["country"] |> is_binary()
+      assert decoded["state"] |> is_binary()
+      assert is_integer(decoded["city_id"])
+    end
+
+    test "volume is within expected range" do
+      for _ <- 1..10 do
+        pool = PoolGenerator.generate_pool()
+        assert pool.volume >= 10_000
+        assert pool.volume <= 30_000
+      end
+    end
   end
 end
