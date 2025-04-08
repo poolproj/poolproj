@@ -1,4 +1,5 @@
 defmodule PoolProj.QueryTest do
+  # mix test test/queries_test.exs
   use ExUnit.Case
 
   alias PoolProj.Query
