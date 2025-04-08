@@ -1,13 +1,13 @@
 defmodule PoolProj.QueryTest do
   use ExUnit.Case
-  # mix test test/queries_test.exs
+  # Run with: mix test test/queries_test.exs
 
   alias PoolProj.{Repo, Pool, Measurement, Analysis, Query}
 
-  import Ecto.Query
-
   setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+    Repo.delete_all(Analysis)
+    Repo.delete_all(Measurement)
+    Repo.delete_all(Pool)
     :ok
   end
 

@@ -1,3 +1,4 @@
+# config/test.exs
 import Config
 
 config :pool_proj, PoolProj.Repo,
