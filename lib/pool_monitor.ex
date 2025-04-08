@@ -312,18 +312,27 @@ defmodule PoolMonitor do
 
     Repo.all(Pool)
     |> Enum.each(fn pool ->
-      with {:ok, latest} <- get_latest_measurement(pool.id),
-           adjusted_data <- PoolDataAdjuster.adjust(latest),
-           {:ok, new_measurement} <- insert_adjusted_measurement(pool, latest, adjusted_data),
-           analysis_data <- analyze_pool_measurement(new_measurement),
-           {:ok, _} <- add_analysis_to_db(analysis_data) do
-        IO.puts("✅ Simulated day for pool #{pool.id}")
-      else
+      case get_latest_measurement(pool.id) do
+        nil ->
+          IO.warn("⚠️  No measurements found for pool #{pool.id}, skipping simulation.")
+
+        {:ok, latest} ->
+          with adjusted_data <- PoolDataAdjuster.adjust(latest),
+               {:ok, new_measurement} <- insert_adjusted_measurement(pool, latest, adjusted_data),
+               analysis_data <- analyze_pool_measurement(new_measurement),
+               {:ok, _} <- add_analysis_to_db(analysis_data) do
+            IO.puts("✅ Simulated day for pool #{pool.id}")
+          else
+            {:error, reason} ->
+              IO.inspect(reason, label: "Simulation failed for pool #{pool.id}")
+          end
+
         {:error, reason} ->
-          IO.inspect(reason, label: "Simulation failed for pool #{pool.id}")
+          IO.inspect(reason, label: "Failed to get latest measurement for pool #{pool.id}")
       end
     end)
   end
+
 
   @doc """
   Fetches the most recent measurement for a given pool ID.
