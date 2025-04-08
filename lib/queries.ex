@@ -280,4 +280,39 @@ defmodule PoolProj.Query do
     from(p in Pool, select: avg(p.volume))
     |> Repo.one()
   end
+
+  @doc """
+  Deletes a pool and all of its associated measurements and analysis records.
+
+  ## Parameters
+
+    * `pool_id` - The ID of the pool to delete.
+
+  ## Returns
+
+    * A tuple with counts of deleted rows: `{analysis_count, measurement_count, pool_count}`
+  """
+  def delete_pool_by_id(pool_id) do
+    analysis_count =
+      Repo.delete_all(
+        from a in Analysis,
+          join: m in Measurement,
+          on: a.measurement_id == m.id,
+          where: m.pool_id == ^pool_id
+      )
+
+    measurement_count =
+      Repo.delete_all(
+        from m in Measurement,
+          where: m.pool_id == ^pool_id
+      )
+
+    pool_count =
+      Repo.delete_all(
+        from p in Pool,
+          where: p.id == ^pool_id
+      )
+
+    {analysis_count, measurement_count, pool_count}
+  end
 end
