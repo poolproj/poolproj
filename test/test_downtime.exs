@@ -1,50 +1,50 @@
-# test_script.exs
-# Test script for the PoolDowntime module
+defmodule PoolDowntimeTest do
+  use ExUnit.Case
+  alias PoolDowntime
 
-# Print a header
-IO.puts("===== Testing Pool Downtime Management Module =====")
+  setup do
+    # 每个测试运行前初始化 ETS 表
+    PoolDowntime.init()
+    :ok
+  end
 
-# Create test data
-pool_id = "pool-123"
-current_ph = 7.2
-target_ph = 7.5
+  test "schedules a valid pH adjustment" do
+    start_time = DateTime.utc_now()
+    end_time = DateTime.add(start_time, 3600)
 
-# Create datetime objects
-start_time = DateTime.utc_now()
-# Set end time to 2 hours later
-end_time = DateTime.add(start_time, 7200, :second)
+    {:ok, record} = PoolDowntime.schedule_ph_adjustment("pool001", 7.0, 7.4, start_time, end_time)
 
-# Schedule a pH adjustment
-IO.puts("\n1. Schedule pH Adjustment")
-case PoolDowntime.schedule_ph_adjustment(pool_id, current_ph, target_ph, start_time, end_time) do
-  {:ok, downtime} ->
-    IO.puts("Successfully scheduled pH adjustment")
-    IO.inspect(downtime, label: "Details")
-  {:error, reason} ->
-    IO.puts("Error: #{reason}")
+    assert record.pool_id == "pool001"
+    assert record.duration_minutes == 60
+    assert record.status == :scheduled
+    assert record.adjustment_size == 0.4
+  end
+
+  test "rejects pH adjustment with end_time before start_time" do
+    start_time = DateTime.utc_now()
+    end_time = DateTime.add(start_time, -3600)
+
+    result = PoolDowntime.schedule_ph_adjustment("pool002", 7.2, 7.5, start_time, end_time)
+
+    assert result == {:error, "End time cannot be before start time"}
+  end
+
+  test "completes a scheduled adjustment" do
+    start_time = DateTime.utc_now()
+    end_time = DateTime.add(start_time, 1800)
+    {:ok, _record} = PoolDowntime.schedule_ph_adjustment("pool003", 7.6, 7.2, start_time, end_time)
+
+    {:ok, completed} = PoolDowntime.complete_ph_adjustment("pool003", 7.2)
+
+    assert completed.status == :completed
+    assert completed.final_value == 7.2
+    assert Map.has_key?(completed, :completed_at)
+  end
+
+  test "estimates pH adjustment time correctly" do
+    time = PoolDowntime.estimate_ph_adjustment_time(7.0, 7.5, 20_000)
+
+    assert is_integer(time)
+    assert time > 0
+  end
 end
-
-# Estimate adjustment time
-IO.puts("\n2. Estimate pH Adjustment Time")
-pool_volume = 15000  # Assuming pool volume of 15,000 gallons
-estimated_minutes = PoolDowntime.estimate_ph_adjustment_time(current_ph, target_ph, pool_volume)
-IO.puts("Estimated time needed: #{estimated_minutes} minutes")
-
-# Start pH adjustment
-IO.puts("\n3. Start pH Adjustment")
-downtime_id = "dt-123"  # Assumed ID
-{:ok, started} = PoolDowntime.start_ph_adjustment(downtime_id)
-IO.inspect(started, label: "Started adjustment")
-
-# Complete pH adjustment
-IO.puts("\n4. Complete pH Adjustment")
-final_ph = 7.5  # Target pH reached
-{:ok, completed} = PoolDowntime.complete_ph_adjustment(downtime_id, final_ph)
-IO.inspect(completed, label: "Completed adjustment")
-
-# Query maintenance history
-IO.puts("\n5. Query Pool Maintenance History")
-{:ok, history} = PoolDowntime.list_ph_adjustments(pool_id)
-IO.inspect(history, label: "Maintenance history")
-
-IO.puts("\n===== Test Complete =====")
