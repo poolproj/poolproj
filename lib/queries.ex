@@ -343,17 +343,40 @@ end
 @doc """
 Displays all measurements for a given pool ID in a readable format.
 """
+@doc """
+Displays all measurements for a given pool ID in a readable table-like format.
+"""
 def print_measurements_for_pool(pool_id) do
-  get_measurements_by_pool_id(pool_id)
-  |> Enum.each(fn m ->
+  measurements = get_measurements_by_pool_id(pool_id)
+
+  if Enum.empty?(measurements) do
+    IO.puts("❌ No measurements found for pool #{pool_id}")
+  else
     IO.puts("""
-    Date: #{m.date}
-    FC: #{m.free_chlorine} | CC: #{m.combined_chlorine} | pH: #{m.pH}
-    TA: #{m.total_alkalinity} | CH: #{m.calcium_hardness}
-    -----------------------------
+    📊 Measurements for Pool #{pool_id}
+    ---------------------------------------------------------------------------
+    |     Date     |  FC  |  CC  |  pH  |   TA   |   CH   |
+    ---------------------------------------------------------------------------
     """)
-  end)
+
+    Enum.each(measurements, fn m ->
+      IO.puts(
+        "| #{String.pad_trailing("#{m.date}", 12)}" <>
+        "| #{pad_float(m.free_chlorine)}" <>
+        "| #{pad_float(m.combined_chlorine)}" <>
+        "| #{pad_float(m.pH)}" <>
+        "| #{pad_float(m.total_alkalinity)}" <>
+        "| #{pad_float(m.calcium_hardness)} |"
+      )
+    end)
+
+    IO.puts("---------------------------------------------------------------------------\n")
+  end
 end
+
+defp pad_float(nil), do: "  -- "
+defp pad_float(val), do: String.pad_leading(:erlang.float_to_binary(val, decimals: 2), 6)
+
 @doc """
 Prints the most recent measurement and associated analysis for a pool.
 """
