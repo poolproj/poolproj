@@ -4,6 +4,22 @@ defmodule PoolProj.Query do
   import Ecto.Query
   alias PoolProj.{Repo, Pool, Measurement, Analysis}
 
+  @doc """
+
+  EXAMPLE USAGE:
+  iex> PoolProj.Query.get_pool_ids()
+
+  Copy one of those IDS and pass into these:
+  iex> PoolProj.Query.get_analysis_by_pool_id(pool_id)
+  iex> PoolProj.Query.get_measurements_by_pool_id(pool_id)
+  iex> PoolProj.Query.get_latest_measurement_by_pool_id(pool_id)
+  iex> PoolProj.Query.get_analysis_by_measurement_id(pool_id)
+
+
+  iex> PoolProj.Query.count_pools()
+  iex> PoolProj.Query.average_pool_volume()
+  """
+
   # Get all pool IDs
   def get_pool_ids do
     from(p in Pool, select: p.id)
