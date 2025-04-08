@@ -127,7 +127,7 @@ defmodule PoolDowntime do
       timestamp: System.system_time(:millisecond)
     }
 
-    IO.inspect(event, label: "📣 Emitted Event")
+    IO.inspect(event, label: " Emitted Event")
     :ok
   end
 end
