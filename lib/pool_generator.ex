@@ -42,36 +42,10 @@ defmodule PoolGenerator do
   @complexity Low - Combines random selection and JSON encoding.
   @since 2025-04-07
   """
-  def generate_pool do
-    %{
-      location: @locations |> Enum.random() |> Jason.encode!(),
-      volume: Enum.random(10_000..30_000)
-    }
-  end
-
-  @doc"""
-  Selects a random city from the CSVReader's list of cities and encodes it as a JSON string.
-
-  Used internally by `generate_pool/0` to assign a randomized location.
-
-  ## Returns
-
-    * A JSON string representing a randomly selected city record
-
-  > This function is private and should not be used externally.
-
-  @example
-
-      "{\"city\":\"Tokyo\",\"country\":\"Japan\",\"state\":\"Tokyo\",\"city_id\":1122}"
-
-  @author Aaron Alexander
-  @version 1.0.0
-  @complexity Low - Random selection and JSON encoding of preloaded list.
-  @since 2025-04-07
-  """
-  def random_location do
-    CSVReader.load_csv()
-    |> Enum.random()
-    |> Jason.encode!()
-  end
+    def generate_pool do
+      %{
+        location: @locations |> Enum.random() |> Jason.encode!(),
+        volume: Enum.random(10_000..30_000)
+      }
+    end
 end
