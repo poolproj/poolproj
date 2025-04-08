@@ -44,7 +44,7 @@ defmodule PoolGenerator do
   """
   def generate_pool do
     %{
-      location: random_location(),
+      location: @locations |> Enum.random() |> Jason.encode!(),
       volume: Enum.random(10_000..30_000)
     }
   end
