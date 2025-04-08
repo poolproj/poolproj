@@ -315,4 +315,77 @@ defmodule PoolProj.Query do
 
     {analysis_count, measurement_count, pool_count}
   end
+
+@doc """
+Prints a readable summary of all pools in the system.
+
+Includes pool ID, volume, and decoded location info.
+"""
+def print_all_pools do
+  Repo.all(Pool)
+  |> Enum.each(fn pool ->
+    location =
+      case Jason.decode(pool.location) do
+        {:ok, loc} -> "#{loc["city"]}, #{loc["state"]}, #{loc["country"]} (ID: #{loc["city_id"]})"
+        _ -> pool.location
+      end
+
+    IO.puts("""
+     Pool ID: #{pool.id}
+     Location: #{location}
+     Volume: #{pool.volume || "unknown"} L
+     Created: #{pool.inserted_at}
+    -----------------------------
+    """)
+  end)
+end
+
+@doc """
+Displays all measurements for a given pool ID in a readable format.
+"""
+def print_measurements_for_pool(pool_id) do
+  get_measurements_by_pool_id(pool_id)
+  |> Enum.each(fn m ->
+    IO.puts("""
+    Date: #{m.date}
+    FC: #{m.free_chlorine} | CC: #{m.combined_chlorine} | pH: #{m.pH}
+    TA: #{m.total_alkalinity} | CH: #{m.calcium_hardness}
+    -----------------------------
+    """)
+  end)
+end
+@doc """
+Prints the most recent measurement and associated analysis for a pool.
+"""
+def print_latest_snapshot(pool_id) do
+  case get_latest_measurement_by_pool_id(pool_id) do
+    nil ->
+      IO.puts("❌ No measurements found for pool #{pool_id}")
+
+    m ->
+      IO.puts("""
+      ✅ Latest Measurement (#{m.date}):
+        - Free Chlorine: #{m.free_chlorine}
+        - Combined Chlorine: #{m.combined_chlorine}
+        - pH: #{m.pH}
+        - TA: #{m.total_alkalinity}
+        - CH: #{m.calcium_hardness}
+      """)
+
+      case get_analysis_by_measurement_id(m.id) do
+        nil ->
+          IO.puts("⚠️  No analysis found for this measurement.")
+
+        a ->
+          IO.puts("""
+          📊 Analysis:
+            - Status: #{a.status}
+            - Recommendation:
+              #{a.recommendation}
+          """)
+      end
+  end
+end
+
+
 end
